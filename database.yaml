@@ -1,0 +1,7 @@
+
+conection:
+  user: root
+  password: root123**
+  driver: sqlite
+  host: localhost
+  database: database
