@@ -3,7 +3,6 @@ from dao.professor_dao import Professor_Dao
 from dao.database_exception import Database_Exception
 from service.service_exception import Service_Exception
 
-
 class Professor_Service:
     def get_professor_list(self):
         try:
@@ -95,6 +94,32 @@ class Professor_Service:
         try:
             professor_dao = Professor_Dao()
             professor_dao.delete_professor(id)
+
+        except Database_Exception as ex:
+            raise Service_Exception(str(ex))
+
+    # This method has never been tested
+    def get_professor_from_id(self, id):
+        try:
+            professor_dao = Professor_Dao()
+            return professor_dao.get_professor_from_id(id)
+    
+        except Database_Exception as ex:
+            raise Service_Exception(str(ex))
+
+    def get_professor_stats(self):
+        try:
+            professor_dao = Professor_Dao()
+            stats = professor_dao.get_professor_stats()
+            return stats[0]
+
+        except Database_Exception as ex:
+            raise Service_Exception(str(ex))
+
+    def update_professor_names(self, professor_id, lastname, firstname):
+        try:
+            professor_dao = Professor_Dao()
+            professor_dao.update_professor_names(professor_id, lastname, firstname)
 
         except Database_Exception as ex:
             raise Service_Exception(str(ex))

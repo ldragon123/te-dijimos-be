@@ -1,7 +1,7 @@
-from dao.database import Review
+from dao.database import Review, Professor
 from dao.database import DatabaseConnection
 from dao.database_exception import Database_Exception
-from sqlalchemy import func
+from sqlalchemy import func, desc, distinct
 
 
 class Review_Dao:
@@ -48,6 +48,15 @@ class Review_Dao:
         except Exception as ex:
             raise Database_Exception(str(ex))
 
+    def delete_from_professor(self, professor_id):
+        try:
+            tmpSession = self.get_connection()
+            tmpSession.query(Review).filter(Review.professor_id == professor_id).delete()
+            tmpSession.commit()
+
+        except Exception as ex:
+            raise Database_Exception(str(ex))
+
     def modify_review_description(self, id, description):
         try:
             tmpSession = self.get_connection()
@@ -75,8 +84,38 @@ class Review_Dao:
         except Exception as ex:
             raise Database_Exception(str(ex))
 
+    def get_last_reviews(self):
+        try:
+            tmpSession = self.get_connection()
+            review_list = tmpSession.query(Review.description, Professor.lastname, Professor.firstname).join(Professor).filter(Professor.firstname != "Universidad").order_by(desc(Review.id)).limit(3)
+            return review_list
+        except Exception as ex:
+            raise Database_Exception(str(ex))
+
+    def get_review_stats(self):
+        try:
+            tmpSession = self.get_connection()
+            review_stats = tmpSession.query(func.count(Review.id)).first()
+            return review_stats
+
+        except Exception as ex:
+            raise Database_Exception(str(ex))
+        
+    def get_full_review_from_id(self, id):
+        try:
+            tmpSession = self.get_connection()
+            queriedReview = tmpSession.query(Review).filter(
+                Review.id == id)
+
+            return queriedReview
+
+        except Exception as ex:
+            raise Database_Exception(str(ex))
+
+    
     def get_connection(self):
         database = DatabaseConnection()
         tmpSession = database.get_session_for_database_created()
 
         return tmpSession
+

@@ -22,13 +22,14 @@ CORS(app)
 @app.route('/create_professor', methods=['POST'])
 def create_professor():
     data = request.form
+
     first_name = data['first_name']
     last_name = data['last_name']
     school = data['school']
     professor_service = Professor_Service()
 
-    first_name = first_name.strip()
-    last_name = last_name.strip()
+    first_name = first_name.strip().title()
+    last_name = last_name.strip().title()
 
     validator = True
 
@@ -134,7 +135,7 @@ def review_list():
     return Response(json.dumps([review.to_dict() for review in response]), status=200, mimetype='application/json')
 
 
-@app.route('/delete_review/<int:id>', methods=['DELETE'])
+@app.route('/delete_review_leo/<int:id>', methods=['DELETE'])
 def delete_review(id):
     review_service = Review_Service()
 
@@ -147,7 +148,7 @@ def delete_review(id):
     return Response('review successfully deleted', status=204)
 
 
-@app.route('/delete_professor/<int:id>', methods=['DELETE'])
+@app.route('/delete_professor_leo/<int:id>', methods=['DELETE'])
 def delete_professor(id):
     professor_service = Professor_Service()
 
@@ -209,3 +210,73 @@ def get_professor_from_category(category):
         return Response(str(ex), status=500)
 
     return Response(json.dumps([professor.to_dict() for professor in response]), status=200, mimetype='application/json')
+
+
+@app.route('/get_last_reviews', methods=['GET'])
+def get_last_reviews():
+    review_service = Review_Service()
+
+    try:
+        response = review_service.get_last_reviews()
+    except Service_Exception as ex:
+        return Response(str(ex), status=500)
+
+    return Response(json.dumps(response), status=200, mimetype='application/json')
+
+
+@app.route('/get_review_stats', methods=['GET'])
+def get_review_stats():
+    review_service = Review_Service()
+    professor_service = Professor_Service()
+
+    try:
+        review_stats = review_service.get_review_stats()
+        professor_stats = professor_service.get_professor_stats()
+        stats = {"review_stats": review_stats, "professor_stats": professor_stats}
+
+    except Service_Exception as ex:
+        return Response(str(ex), status=500)
+
+    return Response(json.dumps(stats), status=200, mimetype='application/json')
+
+@app.route('/delete_reviews_from_professor/<int:professor_id>', methods=['DELETE'])
+def delete_reviews_from_professor(professor_id):
+    review_service = Review_Service()
+    
+    try:
+        review_service.delete_from_professor(professor_id)
+
+    except Service_Exception as ex:
+        return Response(str(ex), status=500)
+
+    return Response('professor reviews successfully deleted', status=204)
+
+@app.route('/update_professor_names', methods=['PUT'])
+def update_professor_names():
+    data = request.form
+    professor_id = data['id']
+    first_name = data['first_name']
+    last_name = data['last_name']
+
+    professor_service = Professor_Service()
+
+    first_name = first_name.strip().title()
+    last_name = last_name.strip().title()
+
+    validator = True
+
+    if(len(first_name) < 4 or len(first_name) > 20):
+        validator = False
+    if(len(last_name) < 4 or len(last_name) > 20):
+        validator = False
+
+    if (validator == True):
+        try:
+            response = professor_service.update_professor_names(
+                professor_id, last_name, first_name)
+        except Service_Exception as ex:
+            return Response(str(ex), status=500)
+
+        return Response(response, status=201)
+    else:
+        return Response('Professor not updated', status=201)
